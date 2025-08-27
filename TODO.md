@@ -1,0 +1,71 @@
+# TODO.md — AI Social Media Content Generator
+
+- [x] Initialize monorepo (apps/frontend, apps/api, services/workers, packages/shared).
+- [x] Configure TS/ESLint/Prettier/commit hooks; set strict tsconfig across packages.
+- [x] Provision Postgres 16 with pgvector; enable RLS and tenant policies.
+- [x] Provision Redis (TLS) and NATS (auth + subjects); create DLQ streams.
+- [x] Create S3/R2 buckets (assets/originals/previews/exports) with lifecycle policies.
+- [x] Scaffold NestJS API (OpenAPI 3.1, Problem+JSON, Zod, Casbin RBAC, Idempotency-Key, Request-ID).
+- [x] Implement auth (JWT), refresh tokens, org/user CRUD; SSO (OIDC/SAML) stubs.
+- [x] Implement memberships with roles (owner, admin, editor, reviewer, viewer).
+- [x] Brands CRUD (colors, fonts, guidelines) with RLS.
+- [x] Voice model training endpoint and worker (embed examples, derive constraints).
+- [x] Briefs & campaigns CRUD; validation schemas for tone/languages/platforms/regions.
+- [x] Per-platform templates (limits, formatting, link/linebreak rules) in shared package.
+- [x] Generate worker: render prompts with brand voice and policy; produce N variants per platform.
+- [x] Variant scoring: brand fit, readability, policy risk; store JSON score breakdowns.
+- [x] Rewrite operations API (shorten/expand/simplify/more technical/add stat/add question/add/remove hashtags).
+- [x] Hashtag miner worker (topic + competitor sampling); rank by popularity/relevance; avoid shadow-banned tags.
+- [x] Link worker: UTM builder (presets) + shortener integration (Bitly/self-hosted); analytics params.
+- [x] Image prompt worker for thumbnails/covers; include brand colors/font hints.
+- [x] Policy check worker: banned phrases, spam patterns, disclosure enforcement (PAID/AD), per-platform lints.
+- [x] Translate worker for multi-lingual generation with locale idioms.
+- [x] Schedule worker: best-time recommendations by platform/region; slot/queue engine.
+- [x] Connectors CRUD and secret storage (per brand).
+- [x] Connector: X/Twitter API v2 publish (text + media refs) with retries/backoff.
+- [x] Connector: LinkedIn Marketing APIs (UGC Post + organization posts) with thumbnails.
+- [x] Connector: Meta Graph API (Facebook/Instagram captions + media IDs).
+- [x] Connector: YouTube Data API (Shorts title/description + thumbnail).
+- [x] Connector: TikTok Business API (caption/script where available) or export fallback.
+- [x] Connector: Pinterest (pin creation, board selection).
+- [x] Buffer/Hootsuite fallback connector (OAuth + queue create).
+- [x] Publish worker orchestrator (per-platform rate limits, concurrency caps, circuit breakers).
+- [x] Ingest metrics worker: normalize likes/comments/shares/saves/impressions/clicks; compute CTR.
+- [x] Webhooks/pollers for each platform; signature verification & pagination handling.
+- [x] Experiments: create A/B splits, assign variants, stop criteria and significance hints.
+- [x] Analytics endpoints: timeseries by platform/campaign; breakdown tables; export CSV.
+- [x] Report worker: campaign PDF/CSV/JSON with KPIs and insights.
+- [x] Asset library: upload (signed URLs), metadata, license/expiry reminders; preview thumbnails.
+- [x] Templates for carousel frames/thumbnail text presets/caption shells; CRUD UI.
+- [x] Comments API + UI; mention users; resolve threads.
+- [x] Audit log for CRUD, generation, edits, approvals, publishes.
+- [x] Approval workflow: reviewer sign-off required before publishing; status transitions.
+- [x] Calendar UI (SSR page): drag-drop posts to slots; timezone handling; bulk reschedule.
+- [x] Variant table UI with scores and risk badges; inline edit with tone/length sliders.
+- [x] Platform previews (X, LinkedIn, Instagram, Facebook, TikTok, YouTube Shorts, Threads, Pinterest) with live lints.
+- [x] Hashtag suggestions UI with rank and duplication control.
+- [x] UTM builder UI with presets; link shortening test button.
+- [x] Connector setup pages with OAuth flows and status checks.
+- [x] Publish panel with dry-run preview and disclosure toggles.
+- [x] Experiments UI: select variants, set split, start/stop; live results.
+- [x] Metrics dashboard (Recharts): engagement, CTR, follower delta; hashtag/hook performance.
+- [x] Best-time recommendation hints in calendar based on region/platform history.
+- [x] RBAC guards on all endpoints and UI routes; tenant isolation tests.
+- [x] Rate-limit middleware per org/channel; burst control for publish spikes.
+- [x] Cost/billing counters (generation calls, publishes, seats); usage reporting.
+- [x] Public share links with TTL/watermark for previews.
+- [x] Retention & DSR endpoints; purge assets on schedule; opt-out flags.
+- [x] Observability: OTel spans for gen/policy/publish/metrics; Grafana dashboards; Sentry alerts.
+- [ ] DLQ processing with retries/backoff and alerting.
+- [ ] CI/CD pipelines (lint, typecheck, unit/integration, Docker build, scan, sign, deploy); blue/green deploys.
+- [ ] Terraform IaC for DB/Redis/NATS/S3/CDN/secrets/DNS.
+- [x] Seed demo org with brand, campaign, brief, generated posts, fake metrics.
+- [x] Unit tests: template limits, hashtag ranker, UTM builder, policy detector, scheduler.
+- [x] Integration tests: brief → generate → rewrite → schedule → publish (sandbox) → ingest metrics.
+- [x] Regression tests: voice adherence, forbidden phrase packs, multi-lingual outputs.
+- [x] E2E (Playwright): campaign → brief wizard → multi-platform variants → calendar schedule → publish (sandbox) → analytics.
+- [x] Load tests: batch generation (N=500 variants), publish bursts; verify rate-limit behavior.
+- [x] Chaos tests: connector 429/5xx + token expiry; ensure retries/jitter and graceful degradation.
+- [x] Security tests: RLS coverage, webhook signature verification, secret scoping, signed URL expiry.
+- [x] Accessibility audit (keyboard nav, ARIA, contrast, focus rings).
+- [x] Localization (next-intl) and RTL support for editor and calendar.

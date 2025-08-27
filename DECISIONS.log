@@ -1,0 +1,31 @@
+# DECISIONS.log — AI Social Media Content Generator
+
+## 2024-01-17 - Phase 1 Complete: Backend Infrastructure & Core API
+- Implemented complete NestJS API with authentication, RBAC, and all core modules
+- Created all Python workers for content generation, scoring, and platform publishing
+- Established NATS-based event-driven architecture for inter-service communication
+- Set up Postgres with pgvector, Redis, and S3 infrastructure
+- All 32 Phase 1 tasks completed successfully
+
+## 2024-01-17 - Phase 2 Complete: Analytics & Reporting
+- Added analytics endpoints for timeseries and breakdown data
+- Implemented report worker with PDF/CSV/JSON generation
+- Created asset library with signed URL uploads and metadata management
+- Built templates system for carousel frames and content presets
+- Added comments API with mention functionality and thread resolution
+- Implemented comprehensive audit logging system
+- Created approval workflow with reviewer sign-off process
+- All 7 Phase 2 tasks completed successfully
+
+## 2024-01-17 - Phase 3 Complete: Frontend UI Components
+- Built Next.js frontend with TypeScript and Tailwind CSS
+- Created calendar UI with drag-drop functionality and timezone handling
+- Implemented variant table with scoring display and inline editing
+- Built platform previews with live linting for all major platforms
+- Added hashtag suggestions UI with ranking and duplication control
+- Created UTM builder with presets and link shortening
+- All 6 Phase 3 tasks completed successfully
+
+## 2024-01-17 - Phase 4 Started: Advanced UI Features
+- Moving to connector setup pages, publish panel, and experiments UI
+- Next: Metrics dashboard, RBAC guards, and rate limiting

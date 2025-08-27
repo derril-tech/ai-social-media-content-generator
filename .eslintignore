@@ -1,0 +1,46 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+
+# Environment files
+.env*
+
+# Logs
+*.log
+
+# Runtime data
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory
+coverage/
+
+# Cache directories
+.cache/
+.parcel-cache/
+
+# Temporary folders
+tmp/
+temp/
+
+# Editor directories and files
+.vscode/
+.idea/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Database
+*.db
+*.sqlite
+
+# Generated files
+*.generated.ts
+*.generated.js

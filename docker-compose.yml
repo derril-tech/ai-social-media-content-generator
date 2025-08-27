@@ -1,0 +1,73 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: ai-social-media-postgres
+    environment:
+      POSTGRES_DB: ai_social_media
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/01-init.sql
+      - ./docker/postgres/pgvector.sql:/docker-entrypoint-initdb.d/02-pgvector.sql
+      - ./docker/postgres/rls-policies.sql:/docker-entrypoint-initdb.d/03-rls-policies.sql
+    ports:
+      - "5432:5432"
+    networks:
+      - ai-social-media
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: ai-social-media-redis
+    command: redis-server --requirepass redis_password --tls-port 6380 --port 6379
+    volumes:
+      - redis_data:/data
+      - ./docker/redis/redis.conf:/etc/redis/redis.conf
+    ports:
+      - "6379:6379"
+      - "6380:6380"
+    networks:
+      - ai-social-media
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  nats:
+    image: nats:2.10-alpine
+    container_name: ai-social-media-nats
+    command: ["-c", "/etc/nats/nats.conf"]
+    volumes:
+      - nats_data:/data
+      - ./docker/nats/nats.conf:/etc/nats/nats.conf
+    ports:
+      - "4222:4222"
+      - "8222:8222"
+    networks:
+      - ai-social-media
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8222/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+  redis_data:
+  nats_data:
+
+networks:
+  ai-social-media:
+    driver: bridge

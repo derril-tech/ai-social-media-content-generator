@@ -1,0 +1,245 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'AI Social Media Content Generator - S3 Buckets and CloudFront Distribution'
+
+Parameters:
+  ProjectName:
+    Type: String
+    Default: ai-social-media
+    Description: Name of the project
+
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues:
+      - dev
+      - staging
+      - prod
+    Description: Environment name
+
+  AssetsRetentionDays:
+    Type: Number
+    Default: 365
+    MinValue: 30
+    MaxValue: 2555
+    Description: Number of days to retain assets before deletion
+
+  EnableCloudFront:
+    Type: String
+    Default: 'true'
+    AllowedValues:
+      - 'true'
+      - 'false'
+    Description: Whether to create CloudFront distribution
+
+Conditions:
+  CreateCloudFront: !Equals [ !Ref EnableCloudFront, 'true' ]
+
+Resources:
+  # S3 Bucket for original assets (private)
+  AssetsOriginalsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub '${ProjectName}-assets-originals-${Environment}'
+      VersioningConfiguration:
+        Status: Enabled
+      ServerSideEncryptionConfiguration:
+        - ServerSideEncryptionByDefault:
+            SSEAlgorithm: AES256
+          BucketKeyEnabled: true
+      LifecycleConfiguration:
+        Rules:
+          - Id: DeleteOldVersions
+            Status: Enabled
+            NoncurrentVersionExpiration:
+              NoncurrentDays: 30
+          - Id: TransitionToIA
+            Status: Enabled
+            Transitions:
+              - TransitionInDays: 30
+                StorageClass: STANDARD_IA
+          - Id: DeleteExpiredAssets
+            Status: Enabled
+            ExpirationInDays: !Ref AssetsRetentionDays
+            Filter:
+              TagFilters:
+                - Key: expires
+                  Value: 'true'
+      Tags:
+        - Key: Name
+          Value: !Sub '${ProjectName}-assets-originals'
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Project
+          Value: !Ref ProjectName
+
+  # S3 Bucket for processed previews (public read)
+  AssetsPreviewsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub '${ProjectName}-assets-previews-${Environment}'
+      VersioningConfiguration:
+        Status: Enabled
+      ServerSideEncryptionConfiguration:
+        - ServerSideEncryptionByDefault:
+            SSEAlgorithm: AES256
+          BucketKeyEnabled: true
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: false
+        BlockPublicPolicy: false
+        IgnorePublicAcls: false
+        RestrictPublicBuckets: false
+      LifecycleConfiguration:
+        Rules:
+          - Id: DeleteOldVersions
+            Status: Enabled
+            NoncurrentVersionExpiration:
+              NoncurrentDays: 7
+          - Id: TransitionToIA
+            Status: Enabled
+            Transitions:
+              - TransitionInDays: 30
+                StorageClass: STANDARD_IA
+      Tags:
+        - Key: Name
+          Value: !Sub '${ProjectName}-assets-previews'
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Project
+          Value: !Ref ProjectName
+
+  # Public read policy for previews bucket
+  AssetsPreviewsBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref AssetsPreviewsBucket
+      PolicyDocument:
+        Statement:
+          - Sid: PublicReadGetObject
+            Effect: Allow
+            Principal: '*'
+            Action: s3:GetObject
+            Resource:
+              - !Sub '${AssetsPreviewsBucket}/*'
+              - !Sub '${AssetsPreviewsBucket}'
+
+  # S3 Bucket for exports (private, temporary)
+  AssetsExportsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub '${ProjectName}-assets-exports-${Environment}'
+      VersioningConfiguration:
+        Status: Suspended
+      ServerSideEncryptionConfiguration:
+        - ServerSideEncryptionByDefault:
+            SSEAlgorithm: AES256
+          BucketKeyEnabled: true
+      LifecycleConfiguration:
+        Rules:
+          - Id: DeleteExportsAfter7Days
+            Status: Enabled
+            ExpirationInDays: 7
+      Tags:
+        - Key: Name
+          Value: !Sub '${ProjectName}-assets-exports'
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Project
+          Value: !Ref ProjectName
+
+  # CloudFront Origin Access Identity
+  CloudFrontOriginAccessIdentity:
+    Type: AWS::CloudFront::OriginAccessIdentity
+    Condition: CreateCloudFront
+    Properties:
+      OriginAccessIdentityConfig:
+        Comment: !Sub 'OAI for ${ProjectName} assets previews'
+
+  # CloudFront Distribution
+  CloudFrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    Condition: CreateCloudFront
+    Properties:
+      DistributionConfig:
+        Comment: !Sub '${ProjectName} Assets Previews CDN'
+        DefaultRootObject: ''
+        Enabled: true
+        IPV6Enabled: true
+        PriceClass: PriceClass_100
+        Origins:
+          - DomainName: !GetAtt AssetsPreviewsBucket.RegionalDomainName
+            Id: !Sub 'S3-${AssetsPreviewsBucket}'
+            S3OriginConfig:
+              OriginAccessIdentity: !Sub 'origin-access-identity/cloudfront/${CloudFrontOriginAccessIdentity}'
+        DefaultCacheBehavior:
+          TargetOriginId: !Sub 'S3-${AssetsPreviewsBucket}'
+          ViewerProtocolPolicy: redirect-to-https
+          Compress: true
+          ForwardedValues:
+            QueryString: false
+            Cookies:
+              Forward: none
+          CachePolicyId: '4135ea2d-6df8-44a3-9df3-4b5a84be39ad' # CachingEnabled
+        Restrictions:
+          GeoRestriction:
+            RestrictionType: none
+        ViewerCertificate:
+          CloudFrontDefaultCertificate: true
+
+  # IAM Policy for application access
+  S3AssetsAccessPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: !Sub '${ProjectName}-s3-assets-access-${Environment}'
+      Description: IAM policy for application to access S3 asset buckets
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action:
+              - s3:GetObject
+              - s3:PutObject
+              - s3:DeleteObject
+              - s3:ListBucket
+            Resource:
+              - !GetAtt AssetsOriginalsBucket.Arn
+              - !Sub '${AssetsOriginalsBucket}/*'
+              - !GetAtt AssetsPreviewsBucket.Arn
+              - !Sub '${AssetsPreviewsBucket}/*'
+              - !GetAtt AssetsExportsBucket.Arn
+              - !Sub '${AssetsExportsBucket}/*'
+          - Effect: Allow
+            Action: s3:GetObject
+            Resource:
+              - !GetAtt AssetsPreviewsBucket.Arn
+              - !Sub '${AssetsPreviewsBucket}/*'
+
+Outputs:
+  AssetsOriginalsBucketName:
+    Description: Name of the S3 bucket for original assets
+    Value: !Ref AssetsOriginalsBucket
+    Export:
+      Name: !Sub '${AWS::StackName}-AssetsOriginalsBucketName'
+
+  AssetsPreviewsBucketName:
+    Description: Name of the S3 bucket for preview assets
+    Value: !Ref AssetsPreviewsBucket
+    Export:
+      Name: !Sub '${AWS::StackName}-AssetsPreviewsBucketName'
+
+  AssetsPreviewsCloudFrontURL:
+    Description: CloudFront URL for preview assets
+    Value: !If [CreateCloudFront, !GetAtt CloudFrontDistribution.DomainName, 'CloudFront not enabled']
+    Export:
+      Name: !Sub '${AWS::StackName}-AssetsPreviewsCloudFrontURL'
+
+  AssetsExportsBucketName:
+    Description: Name of the S3 bucket for export assets
+    Value: !Ref AssetsExportsBucket
+    Export:
+      Name: !Sub '${AWS::StackName}-AssetsExportsBucketName'
+
+  S3AssetsAccessPolicyArn:
+    Description: ARN of the IAM policy for S3 assets access
+    Value: !Ref S3AssetsAccessPolicy
+    Export:
+      Name: !Sub '${AWS::StackName}-S3AssetsAccessPolicyArn'

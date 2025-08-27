@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "report-worker"
+version = "0.1.0"
+description = "AI Social Media Content Generator - Report Worker"
+authors = ["Cursor AI <noreply@example.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+fastapi = "^0.112.0"
+uvicorn = {extras = ["standard"], version = "^0.30.0"}
+nats-py = "^2.7.2"
+python-dotenv = "^1.0.1"
+reportlab = "^4.1.0"
+jinja2 = "^3.1.3"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

@@ -1,0 +1,39 @@
+{
+  "name": "ai-social-media-content-generator",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "services/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "turbo build",
+    "dev": "turbo dev",
+    "lint": "turbo lint",
+    "lint:fix": "turbo lint --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "turbo test",
+    "typecheck": "turbo typecheck",
+    "prepare": "husky install"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^19.8.1",
+    "@commitlint/config-conventional": "^19.8.1",
+    "@types/node": "^20.8.7",
+    "@typescript-eslint/eslint-plugin": "^8.41.0",
+    "@typescript-eslint/parser": "^8.41.0",
+    "eslint": "^8.57.1",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.4",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.1.5",
+    "prettier": "^3.6.2",
+    "turbo": "^1.10.12",
+    "typescript": "^5.2.2"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

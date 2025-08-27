@@ -1,0 +1,26 @@
+version: '3.8'
+
+# Development overrides for docker-compose.yml
+services:
+  postgres:
+    environment:
+      POSTGRES_DB: ai_social_media_dev
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres_dev_password
+    volumes:
+      - ./docker/postgres/dev-init.sql:/docker-entrypoint-initdb.d/04-dev-init.sql
+    ports:
+      - "5432:5432"
+
+  redis:
+    command: redis-server --requirepass redis_dev_password
+    ports:
+      - "6379:6379"
+
+  nats:
+    environment:
+      - NATS_USER=nats_dev_user
+      - NATS_PASSWORD=nats_dev_password
+    ports:
+      - "4222:4222"
+      - "8222:8222"
